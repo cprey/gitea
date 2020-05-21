@@ -1,0 +1,44 @@
+version: '3.3'
+services:
+    gitea-db:
+      image: mariadb:10.2
+      restart: always
+      env_file:
+          - .env
+      environment:
+          - MYSQL_DATABASE=${MYSQL_DATABASE}
+          - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+          - MYSQL_USER=${MYSQL_USER}
+          - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      volumes:
+          - /var/lib/mysql/gitea:/var/lib/mysql
+      networks:
+        default:
+          aliases:
+            - gitea-db
+    
+    gitea-app:
+      image: gitea/gitea
+      container_name: gitea-app
+      restart: always
+      ports:
+        - ${GITEA_SSH_PORT}:22
+        - ${GITEA_HTTP_PORT}:3000
+      environment:
+        - USER_UID=1000
+        - USER_GID=1000
+        - DB_TYPE=mysql
+        - DB_HOST=${DB_HOST}:3306
+        - DB_NAME=${DB_NAME}
+        - DB_USER=${MYSQL_USER}
+        - DB_PASSWD=${MYSQL_PASSWORD}
+      volumes:
+        - /var/lib/gitea-data:/data
+        - /etc/timezone:/etc/timezone:ro
+        - /etc/localtime:/etc/localtime:ro
+      depends_on:
+        - gitea-db
+      networks:
+        default:
+          aliases:
+            - gitea
